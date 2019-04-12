@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+
+  nats-database:
+    image: postgres:10.0-alpine
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - TZ=UTC
+    volumes:
+      - /home/sergey/docker/test/nats-streaming/data:/var/lib/postgresql/data
+      - /home/sergey/docker/test/nats-streaming/dump:/var/dump
+
+  nats-streaming:
+    image: nats-streaming:latest
+    command: [
+      "-m", "8222",
+      "-mc", "15000",
+      "-store", "SQL",
+      "--sql_driver", "postgres",
+      "--sql_source", "host=nats-database port=5432 user=user password=password dbname=db sslmode=disable",
+      "--max_age", "24h",
+      "--max_inactivity", "1h"
+    ]
+    depends_on:
+      - nats-database
